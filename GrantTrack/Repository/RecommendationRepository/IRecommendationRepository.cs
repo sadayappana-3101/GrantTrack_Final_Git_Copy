@@ -11,6 +11,14 @@ namespace GrantTrack.Repository.RecommendationRepository
         Task<bool> BulkAssignAsync(BulkAssignmentDto dto);
         Task<Recommendation?> GetRecommendationByReviewAsync(int reviewId);
         Task<bool> ApplicationExistsAsync(int applicationId);
+
+        /// <summary>
+        /// True when the application is still in Draft status. Used by
+        /// SubmitReviewAsync to refuse recommendations on un-submitted
+        /// applications (mirrors the guard in ReviewService.BulkAssign).
+        /// </summary>
+        Task<bool> IsApplicationInDraftAsync(int applicationId);
+
         Task<bool> ReviewerExistsAsync(int reviewerId);
         Task<Recommendation?> GetRecommendationByApplicationAndReviewerAsync(int applicationId, int reviewerId);
     }

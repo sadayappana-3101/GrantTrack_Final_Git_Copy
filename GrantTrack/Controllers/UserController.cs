@@ -11,7 +11,6 @@ using GrantTrack.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using GrantTrack.Utility;
 
 namespace GrantTrack.Controllers
 {
@@ -156,7 +155,7 @@ namespace GrantTrack.Controllers
                 var users = await _userService.GetAllUsersAsync(_context);
                 return Ok(users);
             }
-            catch (Exception ex)
+            catch
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     "An error occurred while retrieving the user list.");

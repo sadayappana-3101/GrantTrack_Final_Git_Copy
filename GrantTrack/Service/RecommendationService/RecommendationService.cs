@@ -26,6 +26,18 @@ public class RecommendationService : IRecommendationService
             throw new ArgumentException($"Application ID {dto.ApplicationId} does not exist.");
         }
 
+        // Block recommendations on Draft applications. Mirrors the guard in
+        // ReviewService.BulkAssignReviewersAsync — keeps the workflow tight
+        // so an Approver never receives a recommendation on an unsubmitted
+        // application (the BE rejects decisions on Drafts at the Approver
+        // step, but it's better to surface the error earlier).
+        if (await _repo.IsApplicationInDraftAsync(dto.ApplicationId))
+        {
+            throw new InvalidOperationException(
+                $"Application #{dto.ApplicationId} is still in Draft. " +
+                "The applicant must submit it before recommendations can be recorded.");
+        }
+
         // Validate ReviewerId
         var reviewerExists = await _repo.ReviewerExistsAsync(dto.ReviewerId);
         if (!reviewerExists)

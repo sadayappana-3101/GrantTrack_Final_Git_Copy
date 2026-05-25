@@ -47,7 +47,11 @@ namespace GrantTrack.Controllers
 
         }
         [HttpGet("GetPrograms")]
-        [Authorize(Roles = nameof(UserRole.Admin))]
+        // Any authenticated user can browse programs. Applicants need this
+        // to know what to apply to; reviewers / approvers / finance / compliance
+        // need it for context on the applications they handle. Admin still
+        // owns the create/update/delete endpoints below.
+        [Authorize]
         public async Task<IActionResult> GetPrograms()
         {
             try

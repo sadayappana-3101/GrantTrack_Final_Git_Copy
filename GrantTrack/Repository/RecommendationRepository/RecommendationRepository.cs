@@ -117,6 +117,11 @@ namespace GrantTrack.Repository.RecommendationRepository
             return await _context.Applications.AnyAsync(a => a.ApplicationId == applicationId);
         }
 
+        public Task<bool> IsApplicationInDraftAsync(int applicationId) =>
+            _context.Applications
+                .AnyAsync(a => a.ApplicationId == applicationId
+                            && a.Status == ApplicationStatus.Draft);
+
         public async Task<bool> ReviewerExistsAsync(int reviewerId)
         {
             return await _context.Reviews.AnyAsync(r => r.ReviewerId == reviewerId);

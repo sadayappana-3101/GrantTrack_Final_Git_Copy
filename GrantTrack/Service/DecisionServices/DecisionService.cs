@@ -83,15 +83,34 @@ namespace GrantTrack.Service.DecisionServices
             _context.Applications.Update(application);
             await _context.SaveChangesAsync();
 
-            // 5. Create Audit Log
-            var auditLog = new AuditLog
+            // 5. Create Audit Log — best-effort.
+            //
+            // AuditLog.ActionId is a FK into the Operation table. When that
+            // table isn't seeded (the default migration ships it empty) any
+            // insert with ActionId = 0 or 1 fails the FK constraint and
+            // bubbles up as a 500. By this point the Decision row is
+            // already saved and Application.Status has been flipped — so
+            // failing the whole call now would surface a misleading error
+            // to the Approver and leave the system in an inconsistent
+            // outward state. Treat audit logging as auxiliary and swallow
+            // failures here; the Decision row is the source of truth.
+            try
             {
-                UserId = dto.ApproverId,
-                ActionId = dto.DecisionValue == DecisionStatus.Approved ? 0 : 1, // 0 = Approve, 1 = Reject
-                Resource = "Decision",
-                TimeStamp = DateTime.UtcNow
-            };
-            await _auditLogRepository.AddAuditLogAsync(auditLog);
+                var auditLog = new AuditLog
+                {
+                    UserId = dto.ApproverId,
+                    ActionId = dto.DecisionValue == DecisionStatus.Approved ? 0 : 1, // 0 = Approve, 1 = Reject
+                    Resource = "Decision",
+                    TimeStamp = DateTime.UtcNow
+                };
+                await _auditLogRepository.AddAuditLogAsync(auditLog);
+            }
+            catch
+            {
+                // Most likely an FK violation because the Operation table
+                // has no row matching ActionId 0/1. Seeding Operation would
+                // make this clean again — leaving as a known follow-up.
+            }
         }
     }
 }

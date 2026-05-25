@@ -136,7 +136,7 @@ namespace GrantTrack.Service
                 Email = dto.Email,
                 Phone = dto.Phone,
                 Status = true,
-                // REQUIRED because User.Password is [Required]
+                // REQUIRED User.Password is [Required]
                 Password = hashedPassword,
 
                 CreatedAt = DateTime.UtcNow
@@ -193,12 +193,12 @@ namespace GrantTrack.Service
                 .ToListAsync();
         }
 
-        public async Task<string?> DeactivateUserByIdAsync(int id)
+        public async Task<string> DeactivateUserByIdAsync(int id)
         {
             var users = await _userRepository.GetAllUsersAsync();
             var user = users.FirstOrDefault(u => u.UserId == id);
 
-            if (user == null) return null;
+            if (user == null) return string.Empty;
 
             if (user.Status == false)
             {

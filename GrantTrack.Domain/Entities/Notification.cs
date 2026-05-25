@@ -5,6 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GrantTrack.Domain.Entities;
 
+public enum NotificationStatus
+{
+    Unread = 0,
+    Read = 1
+}
 [Table("Notification")]
 [PrimaryKey("NotificationId")]
 public class Notification
@@ -19,7 +24,7 @@ public class Notification
     public string Message { get; set; }
     [Column(TypeName = "VarChar(50)")]
     public string Category { get; set; }
-    public bool Status { get; set; }
+    public NotificationStatus Status { get; set; }
     public DateTime CreatedDate { get; set; }
     public virtual User? UserIdNavigation { get; set; }
     public virtual Application? ApplicationIdNavigation { get; set; }

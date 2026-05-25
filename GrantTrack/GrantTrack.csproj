@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="16.1.1" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
     <PackageReference Include="DotNetEnv" Version="3.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
@@ -24,11 +25,14 @@
 
   <ItemGroup>
     <Folder Include="Dto\GrantReportDos\" />
+    <Folder Include="Dto\NotificationsDtos\" />
     <Folder Include="Dto\RecommendationDto\" />
     <Folder Include="Repository\AssignmentService\" />
     <Folder Include="Repository\ComplianceCheckRepository\" />
+    <Folder Include="Repository\NotificationRepository\" />
     <Folder Include="Repository\RecommendationRepository\" />
     <Folder Include="Repository\ReviewRepository\" />
+    <Folder Include="Service\NotificationServices\" />
     <Folder Include="Service\RecommendationService\" />
     <Folder Include="Service\ReviewFilterService\" />
 

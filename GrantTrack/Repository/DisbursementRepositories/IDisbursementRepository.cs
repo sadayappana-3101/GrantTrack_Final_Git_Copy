@@ -1,6 +1,6 @@
 using System;
 using GrantTrack.Domain.Entities;
-
+using AppEntity = GrantTrack.Domain.Entities.Application;
 namespace GrantTrack.Repository.DisbursementRepositories;
 
 public interface IDisbursementRepository
@@ -9,7 +9,7 @@ public interface IDisbursementRepository
     Task<Disbursement?> GetByIdAsync(int id);
     Task<Disbursement> UpdateAsync(Disbursement disbursement);
     Task<decimal> GetTotalDisbursedAmountAsync(int applicationId);
-    Task<Application?> GetApplicationWithProgramAsync(int applicationId);
+    Task<AppEntity?> GetApplicationWithProgramAsync(int applicationId);
     Task<Payment> CreatePaymentAsync(Payment payment);
     Task<decimal> GetTotalPaidAmountAsync(int disbursementId);
 }

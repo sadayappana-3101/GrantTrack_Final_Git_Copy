@@ -3,9 +3,10 @@ using GrantTrack.Domain.Entities;
 using GrantTrack.Dto.ApplicationDtos;
 using GrantTrack.Events;
 using GrantTrack.Repository.ApplicationRepositories;
+using GrantTrack.Repository.Interface;
 using GrantTrack.Repository.ProgramRepository;
 using GrantTrack.Utility;
-
+using AppEntity = GrantTrack.Domain.Entities.Application;
 namespace GrantTrack.Service.ApplicationServices;
 
 public class ApplicationService : IApplicationService
@@ -34,7 +35,7 @@ public class ApplicationService : IApplicationService
         if (await _ApplicationRepo.ExistsForApplicantAsync(applicantId, dto.ProgramId))
             throw new InvalidOperationException(Messages.DuplicateApplication);
 
-        var application = new Application
+        var application = new AppEntity
         {
             ProgramId   = dto.ProgramId,
             ApplicantId = applicantId,
@@ -84,7 +85,7 @@ public class ApplicationService : IApplicationService
         return ToDto(updated);
     }
 
-    private static ApplicationResponseDto ToDto(Application a) => new()
+    private static ApplicationResponseDto ToDto(AppEntity a) => new()
     {
         ApplicationId = a.ApplicationId,
         ProgramId     = a.ProgramId,

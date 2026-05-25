@@ -21,6 +21,14 @@ public class ReviewService : IReviewService
             return (false, "One or more Application IDs are invalid.");
         }
 
+        var draftIds = await _reviewRepo.GetDraftApplicationIdsAsync(appIds);
+        if (draftIds.Count > 0)
+        {
+            return (false,
+                $"Application(s) {string.Join(", ", draftIds.Select(id => $"#{id}"))} are still in Draft. " +
+                "The applicant must submit them before reviewers can be assigned.");
+        }
+
         //Validate if all Reviewer IDs exist
         var reviewerIds = dto.Assignments.Select(a => a.ReviewerId).Distinct().ToList();
         if (!await _reviewRepo.ReviewersExistAsync(reviewerIds))
@@ -28,7 +36,7 @@ public class ReviewService : IReviewService
             return (false, "One or more Reviewer IDs do not exist.");
         }
 
-        //Workload Check (Max 5 Pending)
+        //Workload Check
         foreach (var reviewerId in reviewerIds)
         {
             int pendingCount = await _reviewRepo.GetPendingReviewCountAsync(reviewerId);

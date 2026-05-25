@@ -1,7 +1,7 @@
 using System;
 using GrantTrack.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-
+using AppEntity = GrantTrack.Domain.Entities.Application;
 namespace GrantTrack.Repository.DisbursementRepositories;
 
 public class DisbursementRepository : IDisbursementRepository
@@ -40,7 +40,7 @@ public class DisbursementRepository : IDisbursementRepository
                      && d.Status != DisbursementStatus.Cancelled)
             .SumAsync(d => (decimal?)d.Amount) ?? 0;
     }
-    public async Task<Application?> GetApplicationWithProgramAsync(int applicationId)
+    public async Task<AppEntity?> GetApplicationWithProgramAsync(int applicationId)
     {
     return await _context.Applications
         .Include(a => a.ProgramIDNavigation)

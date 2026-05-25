@@ -5,12 +5,22 @@ namespace GrantTrack.Domain.Entities;
 
 public class GrantTrackDbContext : DbContext
 {
+    public GrantTrackDbContext()
+    {
+
+    }
     public GrantTrackDbContext(DbContextOptions<GrantTrackDbContext> options)
         : base(options)
     {
 
     }
-
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            optionsBuilder.UseSqlServer("data source=LTIN718866\\SQLEXPRESS; database=GrantTrack; integrated security=true; trust server certificate=true");
+        }
+    }
     public DbSet<Application> Applications { get; set; }
     public DbSet<Payment> payments { get; set; }
     public DbSet<Disbursement> Disbursements { get; set; }
@@ -95,15 +105,15 @@ public class GrantTrackDbContext : DbContext
 
         modelBuilder.Entity<User>()
         .Property(u => u.Role)
-        .HasConversion<string>(); 
+        .HasConversion<string>();
 
         modelBuilder.Entity<Application>()
         .Property(u => u.Status)
-        .HasConversion<string>(); 
+        .HasConversion<string>();
 
         modelBuilder.Entity<Decision>()
         .Property(u => u.DecisionValue)
-        .HasConversion<string>(); 
+        .HasConversion<string>();
 
         modelBuilder.Entity<Application>()
         .Property(u => u.Status)
@@ -129,8 +139,13 @@ public class GrantTrackDbContext : DbContext
         .Property(c => c.Type)
         .HasConversion<string>();
 
-    modelBuilder.Entity<ComplianceCheck>()
-    .Property(e => e.Result)
-    .HasConversion<string>();
+        modelBuilder.Entity<ComplianceCheck>()
+        .Property(e => e.Result)
+        .HasConversion<string>();
+
+        modelBuilder.Entity<Notification>()
+        .Property(n => n.Status)
+        .HasConversion<string>();
     }
+
 }

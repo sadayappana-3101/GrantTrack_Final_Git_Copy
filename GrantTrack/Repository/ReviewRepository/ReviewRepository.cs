@@ -31,6 +31,20 @@ public class ReviewRepository : IReviewRepository
     }
 
     /// <summary>
+    /// Returns just the application IDs that are still Draft so the
+    /// bulk-assign workflow can refuse them with a useful error message.
+    /// </summary>
+    public async Task<List<int>> GetDraftApplicationIdsAsync(List<int> appIds)
+    {
+        var uniqueIds = appIds.Distinct().ToList();
+        return await _context.Applications
+            .Where(a => uniqueIds.Contains(a.ApplicationId)
+                     && a.Status == ApplicationStatus.Draft)
+            .Select(a => a.ApplicationId)
+            .ToListAsync();
+    }
+
+    /// <summary>
     /// Checks if all provided Reviewer (User) IDs exist in the database.
     /// </summary>
     public async Task<bool> ReviewersExistAsync(List<int> reviewerIds)
@@ -74,40 +88,60 @@ public class ReviewRepository : IReviewRepository
 
     public async Task<List<ReviewFilterResponseDto>> GetFilteredReviewsAsync(ReviewFilterRequestDto filter)
     {
-        var query = from review in _context.Reviews
-                    join app in _context.Applications on review.ApplicationId equals app.ApplicationId
-                    join user in _context.Users on app.ApplicantId equals user.UserId
-                    where review.ReviewerId == filter.ReviewerId
-                    select new { review, app, user };
-
+        var rows = await (
+            from review in _context.Reviews
+            join app in _context.Applications on review.ApplicationId equals app.ApplicationId
+            join user in _context.Users on app.ApplicantId equals user.UserId
+            where review.ReviewerId == filter.ReviewerId
+            select new ReviewWithDecision
+            {
+                ReviewId = review.ReviewId,
+                ApplicationId = review.ApplicationId,
+                ReviewerId = review.ReviewerId,
+                HolderName = user.Name,
+                Decision = _context.Recommendations
+                    .Where(r => r.ApplicationId == review.ApplicationId
+                             && r.ReviewerId == review.ReviewerId)
+                    .Select(r => (ReviewDecision?)r.Decision)
+                    .FirstOrDefault()
+            }
+        ).ToListAsync();
+        IEnumerable<ReviewWithDecision> filtered = rows;
         if (filter.Decision.HasValue)
         {
-            query = query.Where(x => _context.Recommendations
-                .Any(rec => rec.ApplicationId == x.app.ApplicationId && rec.Decision == filter.Decision));
+            var decisionFilter = filter.Decision.Value;
+            filtered = decisionFilter == ReviewDecision.Pending
+                ? rows.Where(x => x.Decision == null)
+                : rows.Where(x => x.Decision == decisionFilter);
         }
-
-        // Materialize first
-        var results = await query.ToListAsync();
-
-        // Remove duplicates in memory
-        var distinctResults = results
-            .GroupBy(x => new { x.review.ApplicationId, x.review.ReviewerId })
+        return filtered
+            .GroupBy(x => new { x.ApplicationId, x.ReviewerId })
             .Select(g => g.First())
             .Skip((filter.PageNumber - 1) * filter.PageSize)
             .Take(filter.PageSize)
             .Select(x => new ReviewFilterResponseDto
             {
-                ReviewId = x.review.ReviewId,
-                ApplicationId = x.app.ApplicationId,
-                HolderName = x.user.Name,
-                ReviewerId = x.review.ReviewerId,
-                Decision = filter.Decision,
+                ReviewId = x.ReviewId,
+                ApplicationId = x.ApplicationId,
+                HolderName = x.HolderName,
+                ReviewerId = x.ReviewerId,
+                Decision = x.Decision ?? ReviewDecision.Pending,
                 PageNumber = filter.PageNumber,
                 PageSize = filter.PageSize
             })
             .ToList();
-
-        return distinctResults;
     }
 
+    /// <summary>
+    /// Internal projection holding a Review row alongside its matching
+    /// Recommendation decision (null when the reviewer hasn't acted yet).
+    /// </summary>
+    private class ReviewWithDecision
+    {
+        public int ReviewId { get; set; }
+        public int ApplicationId { get; set; }
+        public int ReviewerId { get; set; }
+        public string HolderName { get; set; } = string.Empty;
+        public ReviewDecision? Decision { get; set; }
+    }
 }

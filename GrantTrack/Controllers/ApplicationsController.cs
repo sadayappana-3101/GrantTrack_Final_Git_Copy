@@ -62,6 +62,40 @@ public class ApplicationsController : ControllerBase
     }
 
     /// <summary>
+    /// Returns the current state of an application — used by the FE to
+    /// refresh its local cache so the applicant sees the live status
+    /// (e.g. flips from Submitted to Approved once the Approver decides).
+    /// Owner-checked at the service layer.
+    /// GET /api/v1/applications/{id}
+    /// </summary>
+    [HttpGet("{id:int}")]
+    [Authorize(Roles = nameof(UserRole.Applicant))]
+    [ProducesResponseType(typeof(ApplicationResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetById(int id)
+    {
+        try
+        {
+            var applicantId = GetCurrentUserId();
+            var result = await _service.GetByIdAsync(id, applicantId);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { error = Messages.ApplicationNotFound });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = Messages.Forbidden });
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = Messages.UnexpectedError });
+        }
+    }
+
+    /// <summary>
     /// Submits an existing Draft application, transitioning its status to Submitted.
     /// Only the applicant who owns the application can submit it.
     /// POST /api/v1/applications/{id}/submit
